@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TermChat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="chat-page">
+    <div class="app">
+        <!-- الشريط الجانبي -->
+        <aside class="sidebar" id="sidebar">
+            <header class="sidebar-header">
+                <div class="me">
+                    <img id="myAvatar" class="my-avatar" src="" alt="">
+                    <span class="my-id" id="myUserId">---</span>
+                </div>
+                <button class="icon-btn" id="openSettings" aria-label="إعدادات">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
+            </header>
+
+            <section class="sidebar-section">
+                <h3>الغرف</h3>
+                <ul id="roomsList" class="nav-list"></ul>
+            </section>
+
+            <section class="sidebar-section">
+                <h3>الأصدقاء</h3>
+                <form id="addFriendForm" class="add-friend">
+                    <input type="text" id="friendInput" placeholder="name#1234" autocomplete="off">
+                    <button type="submit" aria-label="إضافة">+</button>
+                </form>
+                <ul id="friendsList" class="nav-list"></ul>
+            </section>
+        </aside>
+
+        <!-- منطقة الدردشة -->
+        <main class="chat">
+            <header class="chat-header">
+                <button class="icon-btn mobile-only" id="toggleSidebar" aria-label="القائمة">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <h2 id="roomTitle" class="room-title"># عام</h2>
+                <span class="online-dot" title="متصل"></span>
+            </header>
+
+            <div id="messages" class="messages"></div>
+
+            <footer class="composer">
+                <button class="icon-btn" id="emojiBtn" aria-label="رموز">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                </button>
+                <input type="text" id="messageInput" placeholder="اكتب رسالة..." autocomplete="off">
+                <button id="sendBtn" class="btn-primary send-btn">إرسال</button>
+
+                <div id="emojiPicker" class="emoji-picker hidden"></div>
+            </footer>
+        </main>
+
+<!-- إعدادات -->
+<div id="settingsModal" class="modal hidden">
+    <div class="modal-box">
+        <header class="modal-header">
+            <h2>الإعدادات</h2>
+            <button class="icon-btn" id="closeSettings" aria-label="إغلاق">×</button>
+        </header>
+        <div class="modal-body">
+<!-- البروفايل -->
+            <h3 class="modal-section-title">البروفايل</h3>
+            <div class="profile-edit">
+                <img id="profileAvatarPreview" class="profile-preview" src="" alt="preview">
+                <div class="profile-fields">
+                    <label>اسمك</label>
+                    <input type="text" id="profileName" placeholder="اسمك" maxlength="20">
+
+                    <label>رابط الصورة (اختياري)</label>
+                    <div class="pin-wrap">
+                        <input type="password" id="profileAvatarUrl" placeholder="https://...">
+                        <button type="button" class="eye-btn active" id="eyePreview" aria-label="عرض">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button class="btn-primary" id="saveProfileBtn">حفظ</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- الإعدادات العامة -->
+            <h3 class="modal-section-title">عام</h3>
+            <div class="setting-row">
+                <label>السمة</label>
+                <select id="themeSelect">
+                    <option value="neon">نيون</option>
+                    <option value="dark">غامق</option>
+                    <option value="ocean">محيط</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>حجم الخط</label>
+                <input type="range" id="fontSize" min="12" max="20" value="15">
+            </div>
+            <div class="setting-row">
+                <label>إشعارات</label>
+                <input type="checkbox" id="notifToggle" checked>
+            </div>
+            <div class="setting-row">
+                <label>الصوت</label>
+                <input type="checkbox" id="soundToggle">
+            </div>
+
+            <hr>
+            <button class="btn-danger" id="logoutBtn">خروج</button>
+        </div>
+    </div>
+</div>
+
+<!-- بروفايل الصديق -->
+<div id="friendProfileModal" class="modal hidden">
+    <div class="modal-box friend-profile-box">
+        <header class="modal-header">
+            <h2>البروفايل</h2>
+            <button class="icon-btn" id="closeFriendProfile" aria-label="إغلاق">×</button>
+        </header>
+        <div class="modal-body friend-profile-body">
+            <img id="friendProfileAvatar" class="friend-profile-avatar" src="" alt="">
+            <h3 id="friendProfileName" class="friend-profile-name"></h3>
+            <p id="friendProfileEmail" class="friend-profile-email"></p>
+            <button class="btn-primary" id="friendProfileChat">فتح دردشة</button>
+        </div>
+    </div>
+</div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

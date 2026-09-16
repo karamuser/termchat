@@ -1,0 +1,834 @@
+/* ==================== Reset & Variables ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #05050a;
+    --bg-2: #0d0d18;
+    --bg-3: #14142a;
+    --fg: #00ffcc;
+    --fg-2: #00ccaa;
+    --text: #eaeaff;
+    --text-dim: #8888aa;
+    --border: #1e1e3a;
+    --danger: #ff2d55;
+    --radius: 18px;
+    --font-size: 15px;
+}
+
+body.theme-dark {
+    --bg: #0a0a0a;
+    --bg-2: #141414;
+    --bg-3: #1e1e1e;
+    --fg: #00ff00;
+    --fg-2: #008800;
+    --text: #eeeeee;
+    --text-dim: #888888;
+    --border: #333333;
+}
+
+body.theme-ocean {
+    --bg: #001020;
+    --bg-2: #001a2e;
+    --bg-3: #002a44;
+    --fg: #00d4ff;
+    --fg-2: #0088cc;
+    --text: #e0f4ff;
+    --text-dim: #6688aa;
+    --border: #004466;
+}
+
+body {
+    font-family: Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: var(--font-size);
+    min-height: 100vh;
+    direction: rtl;
+    overflow-x: hidden;
+}
+
+/* ==================== صفحة الدخول ==================== */
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(0, 255, 204, 0.08), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 0, 110, 0.08), transparent 40%),
+        var(--bg);
+}
+
+.login-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 0 60px rgba(0, 255, 204, 0.1);
+}
+
+.brand {
+    color: var(--fg);
+    font-size: 48px;
+    text-align: center;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px var(--fg), 0 0 40px rgba(0, 255, 204, 0.3);
+}
+
+.tagline {
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field label {
+    color: var(--fg);
+    font-size: 13px;
+}
+
+.field input,
+.add-friend input,
+#messageInput {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 10px;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.field input:focus,
+.add-friend input:focus,
+#messageInput:focus {
+    outline: none;
+    border-color: var(--fg);
+    box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.15);
+}
+
+.pin-wrap {
+    position: relative;
+}
+
+.pin-wrap input {
+    padding-left: 48px;
+}
+
+.eye-btn {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.eye-btn:hover {
+    color: var(--fg);
+    background: var(--bg-3);
+}
+
+.eye-btn.active {
+    color: var(--fg);
+}
+
+.btn-primary {
+    background: var(--fg-2);
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    padding: 14px 24px;
+    font-size: 16px;
+    font-family: inherit;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+
+.btn-primary:hover {
+    background: var(--fg);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--fg);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 20px var(--danger);
+}
+
+.hint {
+    color: var(--text-dim);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 20px;
+    font-style: italic;
+}
+/* ==================== صفحة الدردشة ==================== */
+.chat-page {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    height: 100vh;
+}
+
+/* الشريط الجانبي */
+.sidebar {
+    background: var(--bg-2);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.my-id {
+    color: var(--fg);
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 0 0 10px var(--fg);
+}
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.icon-btn:hover {
+    border-color: var(--fg);
+    color: var(--fg);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.sidebar-section h3 {
+    color: var(--fg);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    opacity: 0.8;
+}
+
+.nav-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-list li {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid transparent;
+}
+
+.nav-list li:hover {
+    background: var(--bg-3);
+    border-color: var(--border);
+}
+
+.nav-list li.active {
+    background: var(--bg-3);
+    color: var(--fg);
+    border-color: var(--fg);
+    box-shadow: inset 3px 0 0 var(--fg);
+    text-shadow: 0 0 8px var(--fg);
+}
+
+.nav-list li.empty {
+    color: var(--text-dim);
+    font-style: italic;
+    cursor: default;
+    font-size: 12px;
+}
+
+.nav-list li.empty:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+.add-friend {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.add-friend input {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.add-friend button {
+    background: var(--fg-2);
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    width: 38px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.add-friend button:hover {
+    background: var(--fg);
+    color: var(--bg);
+    box-shadow: 0 0 12px var(--fg);
+}
+
+/* منطقة الدردشة */
+.chat {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    background:
+        radial-gradient(circle at 80% 20%, rgba(255, 0, 110, 0.03), transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(0, 255, 204, 0.03), transparent 50%),
+        var(--bg);
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.room-title {
+    color: var(--fg);
+    font-size: 17px;
+    flex: 1;
+    text-shadow: 0 0 10px var(--fg);
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--fg);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--fg), 0 0 20px var(--fg);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.mobile-only {
+    display: none;
+}
+
+/* الرسائل */
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.message-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 75%;
+    animation: slideIn 0.25s ease-out;
+}
+.message-group.own {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sender-name {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    padding-right: 8px;
+    letter-spacing: 0.5px;
+}
+
+.bubble {
+    background: var(--bg-3);
+    border-radius: 18px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    position: relative;
+    border: 1px solid;
+    max-width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s;
+}
+
+.bubble:hover {
+    transform: translateY(-1px);
+}
+
+.bubble .time {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    text-align: left;
+}
+
+.bubble .text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: inherit;
+}
+
+/* صندوق الإرسال */
+.composer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--bg-2);
+    border-top: 1px solid var(--border);
+    align-items: center;
+    position: relative;
+}
+
+.composer input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 24px;
+}
+
+.send-btn {
+    padding: 12px 24px;
+    border-radius: 24px;
+}
+
+/* إيموجي بيكر */
+.emoji-picker {
+    position: absolute;
+    bottom: 70px;
+    right: 20px;
+    background: var(--bg-2);
+    border: 1px solid var(--fg);
+    border-radius: 14px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    max-width: 320px;
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+    z-index: 50;
+}
+
+.emoji-picker button {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.emoji-picker button:hover {
+    background: var(--bg-3);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==================== Modal ==================== */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.modal-box {
+    background: var(--bg-2);
+    border: 1px solid var(--fg);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 0 60px rgba(0, 255, 204, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    color: var(--fg);
+    font-size: 18px;
+    text-shadow: 0 0 10px var(--fg);
+}
+
+.modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.setting-row label {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.setting-row select,
+.setting-row input[type="range"] {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.setting-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--fg);
+    cursor: pointer;
+}
+
+.modal-body hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 700px) {
+    .app {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 40;
+        transform: translateX(100%);
+        transition: transform 0.25s;
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    .message-group {
+        max-width: 85%;
+    }
+.brand {
+        font-size: 36px;
+    }
+
+    .emoji-picker {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+.google-btn {
+    background: #ffffff;
+    color: #1f1f1f;
+    border: 1px solid #dadce0;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.google-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.google-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.login-status {
+    text-align: center;
+    color: var(--fg);
+    font-size: 14px;
+    margin-top: 10px;
+    min-height: 20px;
+}
+/* ===== Profile في Sidebar ===== */
+.me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.my-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--fg);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+    object-fit: cover;
+    background: var(--bg-3);
+}
+
+/* ===== Friend item ===== */
+.friend-item {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+}
+
+.friend-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    object-fit: cover;
+    background: var(--bg);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.friend-avatar:hover {
+    border-color: var(--fg);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    transform: scale(1.1);
+}
+
+/* ===== Profile Edit في الإعدادات ===== */
+.modal-section-title {
+    color: var(--fg);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 8px 0;
+    text-shadow: 0 0 8px var(--fg);
+}
+
+.profile-edit {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.profile-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--fg);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    object-fit: cover;
+    background: var(--bg-3);
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+
+.profile-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.profile-fields label {
+    color: var(--fg);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.profile-fields input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    width: 100%;
+}
+
+.profile-fields input:focus {
+    outline: none;
+    border-color: var(--fg);
+    box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.15);
+}
+
+/* ===== Friend Profile Modal ===== */
+.friend-profile-box {
+    max-width: 360px;
+}
+
+.friend-profile-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 30px 20px !important;
+}
+
+.friend-profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--fg);
+    box-shadow: 0 0 25px rgba(0, 255, 204, 0.5);
+    object-fit: cover;
+    background: var(--bg-3);
+}
+
+.friend-profile-name {
+    color: var(--fg);
+    font-size: 22px;
+    text-shadow: 0 0 10px var(--fg);
+}
+
+.friend-profile-email {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.friend-profile-body .btn-primary {
+    width: 100%;
+    margin-top: 8px;
+}

@@ -217,6 +217,7 @@ body {
 /* ==================== صفحة الدردشة ==================== */
 .chat-page {
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -224,6 +225,7 @@ body {
     display: grid;
     grid-template-columns: 260px 1fr;
     height: 100vh;
+    height: 100dvh;
 }
 
 /* الشريط الجانبي */
@@ -361,6 +363,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh;
     position: relative;
     background:
         radial-gradient(circle at 80% 20%, rgba(255, 0, 110, 0.03), transparent 50%),
@@ -831,4 +834,23 @@ body {
 .friend-profile-body .btn-primary {
     width: 100%;
     margin-top: 8px;
+}
+/* دعم iPhone/iPad */
+.composer {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.messages {
+    padding-bottom: 8px;
+}
+
+@media (max-width: 700px) {
+    .composer {
+        padding: 10px 12px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+    
+    .chat-header {
+        padding: 10px 14px;
+    }
 }

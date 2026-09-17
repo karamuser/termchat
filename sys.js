@@ -46,7 +46,7 @@ function sysErr(...args) {
 }
 
 function generateLocalId() {
-    return local_`${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    return `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function sleep(ms) {
@@ -74,7 +74,6 @@ async function sendMessageSys(roomId, messageData) {
     const fullMessage = {
         ...messageData,
         localId: localId,
-        senderUid: auth.currentUser?.uid || "",
         status: "pending"
     };
 
@@ -109,8 +108,8 @@ async function trySend(localId, roomId) {
         const cleanData = {
             text: data.text || "",
             imageUrl: data.imageUrl || "",
-            senderUid: data.senderUid,
-            senderName: data.senderName,
+            senderUid: data.senderUid || auth.currentUser?.uid || "",
+            senderName: data.senderName || "?",
             time: serverTimestamp(),
             localId: localId
         };

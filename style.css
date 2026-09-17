@@ -854,3 +854,126 @@ body {
         padding: 10px 14px;
     }
 }
+.file-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.file-input::file-selector-button {
+    background: var(--fg-2);
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.2s;
+}
+
+.file-input::file-selector-button:hover {
+    background: var(--fg);
+    color: var(--bg);
+}
+/* Reply Bar */
+.reply-bar {
+    position: absolute;
+    top: -50px;
+    left: 15px;
+    right: 15px;
+    background: var(--bg-3);
+    border: 1px solid var(--fg);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+}
+
+.reply-content {
+    flex: 1;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.reply-content strong {
+    color: var(--fg);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.reply-content span {
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+/* Reply Preview inside bubble */
+.reply-preview {
+    background: rgba(0, 0, 0, 0.3);
+    border-right: 3px solid var(--fg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+}
+
+.reply-preview strong {
+    color: var(--fg);
+}
+
+/* Bubble Image */
+.bubble-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: block;
+    transition: transform 0.2s;
+}
+
+.bubble-image:hover {
+    transform: scale(1.02);
+}
+
+/* Reply Button */
+.reply-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    margin-top: 6px;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.bubble:hover .reply-btn {
+    opacity: 1;
+}
+
+.reply-btn:hover {
+    border-color: var(--fg);
+    color: var(--fg);
+}
+
+/* Composer Position */
+.composer {
+    position: relative;
+}

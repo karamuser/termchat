@@ -7,6 +7,10 @@ import {
     getAuth, GoogleAuthProvider, signInWithPopup,
     signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+    getStorage, ref as storageRef, uploadBytes, getDownloadURL,
+    deleteObject
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAwc92povSAyJOICmp6HS5MTaTgjqkxIzE",
@@ -22,10 +26,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+const storage = getStorage(app);
+
+const IMGBB_API_KEY = "57c099ccee478056cb795baa3094b428";
 
 export {
-    db, auth, googleProvider,
+    db, auth, googleProvider, storage,
     collection, doc, addDoc, setDoc, getDoc, getDocs, deleteDoc,
     query, orderBy, limit, onSnapshot, serverTimestamp, where,
-    signInWithPopup, signOut, onAuthStateChanged
+    signInWithPopup, signOut, onAuthStateChanged,
+    storageRef, uploadBytes, getDownloadURL, deleteObject,
+    IMGBB_API_KEY
 };

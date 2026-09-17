@@ -31,7 +31,7 @@
             <section class="sidebar-section">
                 <h3>الأصدقاء</h3>
                 <form id="addFriendForm" class="add-friend">
-                    <input type="text" id="friendInput" placeholder="name#1234" autocomplete="off">
+                    <input type="text" id="friendInput" placeholder="friend@email.com" autocomplete="off">
                     <button type="submit" aria-label="إضافة">+</button>
                 </form>
                 <ul id="friendsList" class="nav-list"></ul>
@@ -55,6 +55,14 @@
             <div id="messages" class="messages"></div>
 
             <footer class="composer">
+                <div id="replyBar" class="reply-bar hidden">
+                    <div class="reply-content">
+                        <strong id="replyName"></strong>
+                        <span id="replyText"></span>
+                    </div>
+                    <button id="cancelReplyBtn" class="icon-btn" aria-label="إلغاء">×</button>
+                </div>
+
                 <button class="icon-btn" id="emojiBtn" aria-label="رموز">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
@@ -63,90 +71,94 @@
                         <line x1="15" y1="9" x2="15.01" y2="9"/>
                     </svg>
                 </button>
+                <button class="icon-btn" id="imageBtn" aria-label="صورة">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </button>
+                <input type="file" id="imageInput" accept="image/*" hidden>
+
                 <input type="text" id="messageInput" placeholder="اكتب رسالة..." autocomplete="off">
                 <button id="sendBtn" class="btn-primary send-btn">إرسال</button>
 
                 <div id="emojiPicker" class="emoji-picker hidden"></div>
             </footer>
         </main>
+    </div>
 
-<!-- إعدادات -->
-<div id="settingsModal" class="modal hidden">
-    <div class="modal-box">
-        <header class="modal-header">
-            <h2>الإعدادات</h2>
-            <button class="icon-btn" id="closeSettings" aria-label="إغلاق">×</button>
-        </header>
-        <div class="modal-body">
-<!-- البروفايل -->
-            <h3 class="modal-section-title">البروفايل</h3>
-            <div class="profile-edit">
-                <img id="profileAvatarPreview" class="profile-preview" src="" alt="preview">
-                <div class="profile-fields">
-                    <label>اسمك</label>
-                    <input type="text" id="profileName" placeholder="اسمك" maxlength="20">
+    <!-- إعدادات -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-box">
+            <header class="modal-header">
+                <h2>الإعدادات</h2>
+                <button class="icon-btn" id="closeSettings" aria-label="إغلاق">×</button>
+            </header>
+            <div class="modal-body">
 
-                    <label>رابط الصورة (اختياري)</label>
-                    <div class="pin-wrap">
-                        <input type="password" id="profileAvatarUrl" placeholder="https://...">
-                        <button type="button" class="eye-btn active" id="eyePreview" aria-label="عرض">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                        </button>
+                <!-- البروفايل -->
+                <h3 class="modal-section-title">البروفايل</h3>
+                <div class="profile-edit">
+                    <img id="profileAvatarPreview" class="profile-preview" src="" alt="preview">
+                    <div class="profile-fields">
+                        <label>اسمك</label>
+                        <input type="text" id="profileName" placeholder="اسمك" maxlength="20">
+
+                        <label>صورة البروفايل</label>
+                        <input type="file" id="profileAvatarFile" accept="image/*" class="file-input">
+
+                        <button class="btn-primary" id="saveProfileBtn">حفظ</button>
                     </div>
-
-                    <button class="btn-primary" id="saveProfileBtn">حفظ</button>
                 </div>
-            </div>
 
-            <hr>
+                <hr>
 
-            <!-- الإعدادات العامة -->
-            <h3 class="modal-section-title">عام</h3>
-            <div class="setting-row">
-                <label>السمة</label>
-                <select id="themeSelect">
-                    <option value="neon">نيون</option>
-                    <option value="dark">غامق</option>
-                    <option value="ocean">محيط</option>
-                </select>
-            </div>
-            <div class="setting-row">
-                <label>حجم الخط</label>
-                <input type="range" id="fontSize" min="12" max="20" value="15">
-            </div>
-            <div class="setting-row">
-                <label>إشعارات</label>
-                <input type="checkbox" id="notifToggle" checked>
-            </div>
-            <div class="setting-row">
-                <label>الصوت</label>
-                <input type="checkbox" id="soundToggle">
-            </div>
+                <!-- الإعدادات العامة -->
+                <h3 class="modal-section-title">عام</h3>
+                <div class="setting-row">
+                    <label>السمة</label>
+                    <select id="themeSelect">
+                        <option value="neon">نيون</option>
+                        <option value="dark">غامق</option>
+                        <option value="ocean">محيط</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>حجم الخط</label>
+                    <input type="range" id="fontSize" min="12" max="20" value="15">
+                </div>
+                <div class="setting-row">
+                    <label>إشعارات</label>
+                    <input type="checkbox" id="notifToggle" checked>
+                </div>
+                <div class="setting-row">
+                    <label>الصوت</label>
+                    <input type="checkbox" id="soundToggle">
+                </div>
 
-            <hr>
-            <button class="btn-danger" id="logoutBtn">خروج</button>
+                <hr>
+                <button class="btn-danger" id="logoutBtn">خروج</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- بروفايل الصديق -->
-<div id="friendProfileModal" class="modal hidden">
-    <div class="modal-box friend-profile-box">
-        <header class="modal-header">
-            <h2>البروفايل</h2>
-            <button class="icon-btn" id="closeFriendProfile" aria-label="إغلاق">×</button>
-        </header>
-        <div class="modal-body friend-profile-body">
-            <img id="friendProfileAvatar" class="friend-profile-avatar" src="" alt="">
-            <h3 id="friendProfileName" class="friend-profile-name"></h3>
-            <p id="friendProfileEmail" class="friend-profile-email"></p>
-            <button class="btn-primary" id="friendProfileChat">فتح دردشة</button>
+    <!-- بروفايل الصديق -->
+    <div id="friendProfileModal" class="modal hidden">
+        <div class="modal-box friend-profile-box">
+            <header class="modal-header">
+                <h2>البروفايل</h2>
+                <button class="icon-btn" id="closeFriendProfile" aria-label="إغلاق">×</button>
+            </header>
+            <div class="modal-body friend-profile-body">
+                <img id="friendProfileAvatar" class="friend-profile-avatar" src="" alt="">
+                <h3 id="friendProfileName" class="friend-profile-name"></h3>
+                <p id="friendProfileEmail" class="friend-profile-email"></p>
+                <button class="btn-primary" id="friendProfileChat">فتح دردشة</button>
+            </div>
         </div>
     </div>
-</div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>

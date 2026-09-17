@@ -5,6 +5,8 @@ import {
     signInWithPopup, signOut, onAuthStateChanged
 } from "./firebase.js";
 
+import { uploadToImgBB } from "./upload.js";
+
 // ==================== ثوابت ====================
 const NEON_COLORS = [
     "#ff006e", "#fb5607", "#ffbe0b", "#8338ec",
@@ -21,10 +23,10 @@ const ROOMS = [
 ];
 
 const EMOJIS = [
-    "😀","😂","🤣","😊","😍","🥰","😎","🤔","😅","😢",
-    "😭","😡","👍","👎","🙏","👋","💪","🔥","⭐","💯",
-    "❤️","💔","✨","🎉","🎮","🎯","💻","📱","🚀","🌙",
-    "☀️","🍕","🍔","☕","🎵","📚","⚡","🌟","💎","🏆"
+    "😀", "😂", "🤣", "😊", "😍", "🥰", "😎", "🤔", "😅", "😢",
+    "😭", "😡", "👍", "👎", "🙏", "👋", "💪", "🔥", "⭐", "💯",
+    "❤️", "💔", "✨", "🎉", "🎮", "🎯", "💻", "📱", "🚀", "🌙",
+    "☀️", "🍕", "🍔", "☕", "🎵", "📚", "⚡", "🌟", "💎", "🏆"
 ];
 
 const AVATARS = [
@@ -41,11 +43,12 @@ let currentRoom = "general";
 let unsubscribeMessages = null;
 let allFriends = [];
 let settings = {};
+let replyTo = null;  // ← الرد على رسالة
 
 // ==================== الإعدادات ====================
 function loadSettings() {
     const data = localStorage.getItem("termchat_settings");
-    settings = data ? JSON.parse(data) : { theme: "neon", fontSize: 15, notif: true, sound: false, avatarStyle: 0 };
+    settings = data ? JSON.parse(data) : { theme: "neon", fontSize: 15, notif: true, sound: false };
     applySettings();
     return settings;
 }
@@ -62,11 +65,40 @@ function applySettings() {
     document.documentElement.style.setProperty("--font-size", settings.fontSize + "px");
 }
 
+// ==================== الإشعارات ====================
+async function requestNotificationPermission() {
+    if (!("Notification" in window)) return false;
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
+    try {
+        const permission = await Notification.requestPermission();
+        return permission === "granted";
+    } catch (e) {
+        return false;
+    }
+}
+
+function showNotification(title, body) {
+    if (!settings.notif) return;
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    try {
+        new Notification(title, {
+            body: body.length > 100 ? body.slice(0, 100) + "..." : body,
+            icon: "https://api.dicebear.com/7.x/bottts/svg?seed=termchat"
+        });
+    } catch (e) {
+        // تجاهل الأخطاء
+    }
+}
+
 // ==================== أدوات ====================
 function colorForUser(uid) {
     if (!uid) return NEON_COLORS[0];
     let hash = 0;
-    for (let i = 0; i < uid.length; i++) hash = (hash * 31 + uid.charCodeAt(i)) | 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = (hash * 31 + uid.charCodeAt(i)) | 0;
+    }
     return NEON_COLORS[Math.abs(hash) % NEON_COLORS.length];
 }
 
@@ -85,17 +117,16 @@ function escapeHtml(text) {
 }
 
 function getMyName() {
-    return currentProfile?.name  || currentUser?.displayName || "?";
+    return currentProfile?.name || currentUser?.displayName || "?";
 }
 
 function getMyAvatar() {
     if (currentProfile?.avatar) return currentProfile.avatar;
     if (currentUser?.photoURL) return currentUser.photoURL;
-    return AVATARS[settings.avatarStyle] + encodeURIComponent(getMyName());
+    return AVATARS[0] + encodeURIComponent(getMyName());
 }
-
 function defaultAvatarFor(name) {
-    return AVATARS[settings.avatarStyle] + encodeURIComponent(name);
+    return AVATARS[0] + encodeURIComponent(name || "?");
 }
 
 // ==================== صفحة الدخول ====================
@@ -142,7 +173,6 @@ function setupChat() {
         }
         currentUser = user;
 
-        // اجلب/أنشئ البروفايل
         try {
             const userRef = doc(db, "users", user.uid);
             const snap = await getDoc(userRef);
@@ -170,6 +200,7 @@ function setupChat() {
         setupProfileEdit();
         setupSidebarToggle();
         setupAddFriend();
+        setupReplyCancel();
         loadFriends();
         listenMessages();
     });
@@ -199,6 +230,8 @@ function buildRoomsList() {
 
 function switchRoom(roomId, roomName, li) {
     currentRoom = roomId;
+    replyTo = null;
+    cancelReply();
     document.querySelectorAll("#roomsList li, #friendsList li").forEach(x => x.classList.remove("active"));
     li.classList.add("active");
     document.getElementById("roomTitle").textContent = "# " + roomName;
@@ -210,23 +243,33 @@ function switchRoom(roomId, roomName, li) {
 function setupAddFriend() {
     const form = document.getElementById("addFriendForm");
     if (!form) return;
-
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const input = document.getElementById("friendInput");
         const friendEmail = input.value.trim().toLowerCase();
         input.value = "";
-        if (!friendEmail.includes("@")) { alert("اكتب إيميل صحيح"); return; }
-        if (friendEmail === currentUser.email.toLowerCase()) { alert("ما تكدر تضيف نفسك"); return; }
+
+        if (!friendEmail.includes("@")) {
+            alert("اكتب إيميل صحيح");
+            return;
+        }
+        if (friendEmail === currentUser.email.toLowerCase()) {
+            alert("ما تكدر تضيف نفسك");
+            return;
+        }
 
         try {
             const q = query(collection(db, "users"), where("email", "==", friendEmail), limit(1));
             const snap = await getDocs(q);
-            if (snap.empty) { alert("هذا المستخدم ما مسجل بعد"); return; }
+            if (snap.empty) {
+                alert("هذا المستخدم ما مسجل بعد");
+                return;
+            }
 
             const friendDoc = snap.docs[0];
             const friendUid = friendDoc.id;
             const friendData = friendDoc.data();
+
             await setDoc(doc(db, "users", currentUser.uid, "friends", friendUid), {
                 friendUid: friendUid,
                 friendName: friendData.name || friendEmail,
@@ -255,6 +298,7 @@ function renderFriends() {
     const list = document.getElementById("friendsList");
     if (!list) return;
     list.innerHTML = "";
+
     if (allFriends.length === 0) {
         const li = document.createElement("li");
         li.className = "empty";
@@ -262,16 +306,21 @@ function renderFriends() {
         list.appendChild(li);
         return;
     }
+
     allFriends.forEach(friend => {
         const li = document.createElement("li");
         li.className = "friend-item";
+
         const img = document.createElement("img");
         img.src = friend.friendAvatar || defaultAvatarFor(friend.friendName);
         img.className = "friend-avatar";
+
         const span = document.createElement("span");
         span.textContent = friend.friendName;
+
         li.appendChild(img);
         li.appendChild(span);
+
         li.addEventListener("click", (e) => {
             if (e.target === img) {
                 showFriendProfile(friend);
@@ -287,6 +336,8 @@ function openPrivateChat(friend, li) {
     const ids = [currentUser.uid, friend.friendUid].sort();
     const chatId = "private_" + ids[0] + "_" + ids[1];
     currentRoom = chatId;
+    replyTo = null;
+    cancelReply();
     document.querySelectorAll("#roomsList li, #friendsList li").forEach(x => x.classList.remove("active"));
     li.classList.add("active");
     document.getElementById("roomTitle").textContent = "@ " + friend.friendName;
@@ -316,14 +367,49 @@ function showFriendProfile(friend) {
 
     modal.classList.remove("hidden");
 }
+// ==================== الرد على رسالة ====================
+function setupReplyCancel() {
+    const cancelBtn = document.getElementById("cancelReplyBtn");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            replyTo = null;
+            cancelReply();
+        });
+    }
+}
+
+function startReply(messageId, senderName, text) {
+    replyTo = { messageId, senderName, text };
+    const bar = document.getElementById("replyBar");
+    const replyName = document.getElementById("replyName");
+    const replyText = document.getElementById("replyText");
+    if (bar && replyName && replyText) {
+        replyName.textContent = senderName;
+        replyText.textContent = text.length > 60 ? text.slice(0, 60) + "..." : text;
+        bar.classList.remove("hidden");
+    }
+}
+
+function cancelReply() {
+    const bar = document.getElementById("replyBar");
+    if (bar) bar.classList.add("hidden");
+}
 
 // ==================== الرسائل ====================
 function listenMessages() {
     const messagesEl = document.getElementById("messages");
     if (!messagesEl || !currentUser) return;
 
-    if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+        unsubscribeMessages = null;
+    }
+
     messagesEl.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:20px">تحميل الرسائل...</p>';
+
+    requestNotificationPermission();
+
+    let isFirstLoad = true;
 
     const q = query(
         collection(db, "rooms", currentRoom, "messages"),
@@ -335,8 +421,17 @@ function listenMessages() {
         messagesEl.innerHTML = "";
         let lastSender = null;
         let lastGroup = null;
+
         snap.forEach(docSnap => {
             const data = docSnap.data();
+            data._id = docSnap.id;
+
+            // إشعار إذا رسالة جديدة (مو مني)
+            if (!isFirstLoad && data.senderUid !== currentUser.uid) {
+                const senderName = data.senderName || "?";
+                showNotification(`رساله من${senderName}`, data.text || "📷 صورة");
+            }
+
             if (data.senderUid === lastSender && lastGroup) {
                 addBubbleToGroup(lastGroup, data);
             } else {
@@ -345,7 +440,9 @@ function listenMessages() {
                 lastSender = data.senderUid;
             }
         });
+
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        isFirstLoad = false;
     }, (err) => {
         messagesEl.innerHTML = `<p style="color:var(--danger);padding:20px">خطأ: ${err.message}</p>`;
     });
@@ -376,13 +473,33 @@ function addBubbleToGroup(group, data) {
     bubble.className = "bubble";
     bubble.style.borderColor = color;
     bubble.style.background = `linear-gradient(135deg, rgba(0,0,0,0.4), ${hexToRgba(color, 0.15)})`;
-    bubble.style.boxShadow = `0 0 12px ${hexToRgba(color, 0.3)}`;
+    bubble.style.boxShadow = `0 0 12px ${hexToRgba(color, 0.3)})`;
+    // الرد على رسالة
+    if (data.replyTo) {
+        const replyEl = document.createElement("div");
+        replyEl.className = "reply-preview";
+        replyEl.innerHTML = `<strong>${escapeHtml(data.replyTo.senderName)}</strong>${escapeHtml(data.replyTo.text)}`;
+        bubble.appendChild(replyEl);
+    }
+    // الصورة إذا موجودة
+    if (data.imageUrl) {
+        const imgEl = document.createElement("img");
+        imgEl.src = data.imageUrl;
+        imgEl.className = "bubble-image";
+        imgEl.loading = "lazy";
+        imgEl.addEventListener("click", () => window.open(data.imageUrl, "_blank"));
+        bubble.appendChild(imgEl);
+    }
 
-    const textEl = document.createElement("div");
-    textEl.className = "text";
-    textEl.textContent = data.text;
-    bubble.appendChild(textEl);
+    // النص
+    if (data.text) {
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = data.text;
+        bubble.appendChild(textEl);
+    }
 
+    // الوقت
     const timeEl = document.createElement("span");
     timeEl.className = "time";
     if (data.time && data.time.seconds) {
@@ -392,6 +509,17 @@ function addBubbleToGroup(group, data) {
         timeEl.textContent = "...";
     }
     bubble.appendChild(timeEl);
+
+    // زر الرد
+    const replyBtn = document.createElement("button");
+    replyBtn.className = "reply-btn";
+    replyBtn.textContent = "رد";
+    replyBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        startReply(data._id, data.senderName, data.text || "📷 صورة");
+    });
+    bubble.appendChild(replyBtn);
+
     group.appendChild(bubble);
 }
 
@@ -399,33 +527,105 @@ function addBubbleToGroup(group, data) {
 function setupComposer() {
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    const imageBtn = document.getElementById("imageBtn");
+    const imageInput = document.getElementById("imageInput");
+
     if (!input || !sendBtn) return;
+
     sendBtn.addEventListener("click", sendMessage);
+
     input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendMessage();
+        }
     });
+
+    // إرسال صورة
+    if (imageBtn && imageInput) {
+        imageBtn.addEventListener("click", () => imageInput.click());
+        imageInput.addEventListener("change", async () => {
+            const file = imageInput.files[0];
+            if (!file) return;
+            try {
+                await sendImage(file);
+            } catch (err) {
+                alert("خطأ: " + err.message);
+            }
+            imageInput.value = "";
+        });
+    }
 }
 
 async function sendMessage() {
     const input = document.getElementById("messageInput");
     const text = input.value.trim();
     if (!text || !currentUser) return;
+
+    const messageData = {
+        text: text,
+        senderUid: currentUser.uid,
+        senderName: getMyName(),
+        time: serverTimestamp()
+    };
+
+    if (replyTo) {
+        messageData.replyTo = {
+            messageId: replyTo.messageId,
+            senderName: replyTo.senderName,
+            text: replyTo.text
+        };
+    }
+
     input.value = "";
+    replyTo = null;
+    cancelReply();
+
     try {
-        await addDoc(collection(db, "rooms", currentRoom, "messages"), {
-            text: text,
+        await addDoc(collection(db, "rooms", currentRoom, "messages"), messageData);
+    } catch (err) {
+        alert("صار خطأ: " + err.message);
+    }
+}
+
+async function sendImage(file) {
+    const sendBtn = document.getElementById("sendBtn");
+    const originalText = sendBtn.textContent;
+    sendBtn.disabled = true;
+    sendBtn.textContent = "جاري الرفع...";
+
+    try {
+        const imageUrl = await uploadToImgBB(file);
+
+        const messageData = {
+            text: "",
+            imageUrl: imageUrl,
             senderUid: currentUser.uid,
             senderName: getMyName(),
             time: serverTimestamp()
-        });
-    } catch (err) { alert("صار خطأ: " + err.message); }
-}
+        };
 
-// ==================== الإيموجي ====================
+        if (replyTo) {
+            messageData.replyTo = {
+                messageId: replyTo.messageId,
+                senderName: replyTo.senderName,
+                text: replyTo.text
+            };
+            replyTo = null;
+            cancelReply();
+        }
+
+        await addDoc(collection(db, "rooms", currentRoom, "messages"), messageData);
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = originalText;
+    }
+}
 function setupEmojiPicker() {
     const picker = document.getElementById("emojiPicker");
     const btn = document.getElementById("emojiBtn");
     if (!picker || !btn) return;
+
     picker.innerHTML = "";
     EMOJIS.forEach(emoji => {
         const b = document.createElement("button");
@@ -438,78 +638,77 @@ function setupEmojiPicker() {
         });
         picker.appendChild(b);
     });
+
     btn.addEventListener("click", (e) => {
         e.stopPropagation();
         picker.classList.toggle("hidden");
     });
+
     document.addEventListener("click", (e) => {
-        if (!picker.contains(e.target) && e.target !== btn) picker.classList.add("hidden");
+        if (!picker.contains(e.target) && e.target !== btn) {
+            picker.classList.add("hidden");
+        }
     });
 }
-// ==================== بروفايلي (في الإعدادات) ====================
+
+// ==================== بروفايل المستخدم ====================
 function setupProfileEdit() {
     const nameInput = document.getElementById("profileName");
-    const avatarInput = document.getElementById("profileAvatarUrl");
+    const avatarInput = document.getElementById("profileAvatarFile");
     const previewImg = document.getElementById("profileAvatarPreview");
     const saveBtn = document.getElementById("saveProfileBtn");
-    const eyeBtn = document.getElementById("eyePreview");
 
     if (!nameInput || !saveBtn) return;
 
-    // ملء الحقول
     nameInput.value = getMyName();
-    avatarInput.value = currentProfile?.avatar || "";
     previewImg.src = getMyAvatar();
 
-    // العين: إظهار/إخفاء الـ URL
-    if (eyeBtn) {
-        eyeBtn.classList.add("active");
-        eyeBtn.onclick = () => {
-            if (avatarInput.type === "password") {
-                avatarInput.type = "text";
-                eyeBtn.classList.add("active");
-            } else {
-                avatarInput.type = "password";
-                eyeBtn.classList.remove("active");
-            }
-        };
+    if (avatarInput) {
+        avatarInput.addEventListener("change", () => {
+            const file = avatarInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
-    // معاينة عند تغيير الرابط
-    avatarInput.addEventListener("input", () => {
-        const val = avatarInput.value.trim();
-        previewImg.src = val  `defaultAvatarFor(nameInput.value  "?")`;
-    });
-
-    // معاينة عند تغيير الاسم
-    nameInput.addEventListener("input", () => {
-        if (!avatarInput.value.trim()) {
-            previewImg.src = defaultAvatarFor(nameInput.value || "?");
-        }
-    });
-
-    // حفظ
     saveBtn.onclick = async () => {
         const newName = nameInput.value.trim();
-        const newAvatar = avatarInput.value.trim();
-        if (newName.length < 2) { alert("الاسم قصير"); return; }
+        const avatarFile = avatarInput ? avatarInput.files[0] : null;
+
+        if (newName.length < 2) {
+            alert("الاسم قصير");
+            return;
+        }
 
         saveBtn.disabled = true;
         saveBtn.textContent = "جاري الحفظ...";
 
         try {
+            let newAvatarUrl = currentProfile?.avatar || "";
+
+            if (avatarFile) {
+                newAvatarUrl = await uploadToImgBB(avatarFile);
+            }
+
             await setDoc(doc(db, "users", currentUser.uid), {
                 name: newName,
-                avatar: newAvatar,
+                avatar: newAvatarUrl,
                 email: currentUser.email
             }, { merge: true });
 
             currentProfile.name = newName;
-            currentProfile.avatar = newAvatar;
+            currentProfile.avatar = newAvatarUrl;
             updateMyHeader();
 
             saveBtn.textContent = "تم الحفظ ✓";
-            setTimeout(() => { saveBtn.textContent = "حفظ"; saveBtn.disabled = false; }, 1500);
+            setTimeout(() => {
+                saveBtn.textContent = "حفظ";
+                saveBtn.disabled = false;
+            }, 1500);
         } catch (err) {
             alert("خطأ: " + err.message);
             saveBtn.textContent = "حفظ";
@@ -539,10 +738,33 @@ function setupSettings() {
     openBtn.addEventListener("click", () => modal.classList.remove("hidden"));
     closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
 
-    themeSelect?.addEventListener("change", () => { settings.theme = themeSelect.value; saveSettings(); });
-    fontSize?.addEventListener("input", () => { settings.fontSize = parseInt(fontSize.value); saveSettings(); });
-    notifToggle?.addEventListener("change", () => { settings.notif = notifToggle.checked; saveSettings(); });
-    soundToggle?.addEventListener("change", () => { settings.sound = soundToggle.checked; saveSettings(); });
+    themeSelect?.addEventListener("change", () => {
+        settings.theme = themeSelect.value;
+        saveSettings();
+    });
+    fontSize?.addEventListener("input", () => {
+        settings.fontSize = parseInt(fontSize.value);
+        saveSettings();
+    });
+
+    notifToggle?.addEventListener("change", async () => {
+        settings.notif = notifToggle.checked;
+        saveSettings();
+        if (settings.notif) {
+            const granted = await requestNotificationPermission();
+            if (!granted) {
+                alert("لازم توافق على الإشعارات من المتصفح");
+                notifToggle.checked = false;
+                settings.notif = false;
+                saveSettings();
+            }
+        }
+    });
+
+    soundToggle?.addEventListener("change", () => {
+        settings.sound = soundToggle.checked;
+        saveSettings();
+    });
 
     logoutBtn?.addEventListener("click", async () => {
         if (confirm("متأكد من الخروج؟")) {
@@ -550,11 +772,11 @@ function setupSettings() {
             window.location.href = "index.html";
         }
     });
+
     modal.addEventListener("click", (e) => {
         if (e.target === modal) modal.classList.add("hidden");
     });
 
-    // Friend profile modal
     const fpModal = document.getElementById("friendProfileModal");
     const fpClose = document.getElementById("closeFriendProfile");
     if (fpModal && fpClose) {
@@ -565,7 +787,7 @@ function setupSettings() {
     }
 }
 
-// ==================== Sidebar للجوال ===========
+// ==================== Sidebar للجوال ====================
 function setupSidebarToggle() {
     const btn = document.getElementById("toggleSidebar");
     if (!btn) return;

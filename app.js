@@ -6,6 +6,13 @@ import {
 } from "./firebase.js";
 
 import { uploadToImgBB } from "./upload.js";
+import {
+    initSys,
+    sendMessageSys,
+    listenRoom,
+    stopListening,
+    getStatus
+} from "./sys.js";
 
 // ==================== ثوابت ====================
 const NEON_COLORS = [
@@ -163,6 +170,7 @@ function setupLogin() {
 
 // ==================== صفحة الدردشة ====================
 function setupChat() {
+    initSys();
     const messagesEl = document.getElementById("messages");
     if (!messagesEl) return;
 
@@ -400,36 +408,38 @@ function listenMessages() {
     const messagesEl = document.getElementById("messages");
     if (!messagesEl || !currentUser) return;
 
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
-
     messagesEl.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:20px">تحميل الرسائل...</p>';
 
     requestNotificationPermission();
 
     let isFirstLoad = true;
+    let lastSender = null;
+    let lastGroup = null;
 
-    const q = query(
-        collection(db, "rooms", currentRoom, "messages"),
-        orderBy("time", "asc"),
-        limit(150)
-    );
+    listenRoom(currentRoom, (messages, err) => {
+        if (err) {
+            messagesEl.innerHTML = `<p style="color:var(--danger);padding:20px">خطأ: ${err.message}</p>`;
+            return;
+        }
 
-    unsubscribeMessages = onSnapshot(q, (snap) => {
         messagesEl.innerHTML = "";
-        let lastSender = null;
-        let lastGroup = null;
+        lastSender = null;
+        lastGroup = null;
 
-        snap.forEach(docSnap => {
-            const data = docSnap.data();
-            data._id = docSnap.id;
-
+        messages.forEach(data => {
             // إشعار إذا رسالة جديدة (مو مني)
             if (!isFirstLoad && data.senderUid !== currentUser.uid) {
                 const senderName = data.senderName || "?";
-                showNotification(`رساله من${senderName}`, data.text || "📷 صورة");
+                let title = `رسالة من ${senderName}`;
+                let body = data.text || "📷 صورة";
+
+                if (currentRoom.startsWith("private_")) {
+                    title = `${senderName} فتح معك محادثه`;
+                } else if (currentRoom === "general" || currentRoom === "study" || currentRoom === "games" || currentRoom === "code") {
+                    title = `رسالة جديدة في #${currentRoom}`;
+                }
+
+                showNotification(title, body, `${currentRoom}-${data.senderUid}`);
             }
 
             if (data.senderUid === lastSender && lastGroup) {
@@ -443,8 +453,6 @@ function listenMessages() {
 
         messagesEl.scrollTop = messagesEl.scrollHeight;
         isFirstLoad = false;
-    }, (err) => {
-        messagesEl.innerHTML = `<p style="color:var(--danger);padding:20px">خطأ: ${err.message}</p>`;
     });
 }
 
@@ -565,8 +573,7 @@ async function sendMessage() {
     const messageData = {
         text: text,
         senderUid: currentUser.uid,
-        senderName: getMyName(),
-        time: serverTimestamp()
+        senderName: getMyName()
     };
 
     if (replyTo) {
@@ -581,11 +588,7 @@ async function sendMessage() {
     replyTo = null;
     cancelReply();
 
-    try {
-        await addDoc(collection(db, "rooms", currentRoom, "messages"), messageData);
-    } catch (err) {
-        alert("صار خطأ: " + err.message);
-    }
+    await sendMessageSys(currentRoom, messageData);
 }
 
 async function sendImage(file) {
@@ -601,8 +604,7 @@ async function sendImage(file) {
             text: "",
             imageUrl: imageUrl,
             senderUid: currentUser.uid,
-            senderName: getMyName(),
-            time: serverTimestamp()
+            senderName: getMyName()
         };
 
         if (replyTo) {
@@ -615,12 +617,13 @@ async function sendImage(file) {
             cancelReply();
         }
 
-        await addDoc(collection(db, "rooms", currentRoom, "messages"), messageData);
+        await sendMessageSys(currentRoom, messageData);
     } finally {
         sendBtn.disabled = false;
         sendBtn.textContent = originalText;
     }
 }
+
 function setupEmojiPicker() {
     const picker = document.getElementById("emojiPicker");
     const btn = document.getElementById("emojiBtn");

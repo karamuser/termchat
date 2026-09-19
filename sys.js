@@ -207,7 +207,7 @@ function listenRoom(roomId, callback) {
 
     const q = query(
         collection(db, "rooms", roomId, "messages"),
-        orderBy("time", "asc"),
+        orderBy("time", "desc"),
         limit(150)
     );
 
@@ -222,6 +222,7 @@ function listenRoom(roomId, callback) {
             }
             messages.push(data);
         });
+        messages.reverse();
 
         // نحدّث الكاش
         sysState.cache.set(roomId, messages);
